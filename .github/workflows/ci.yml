@@ -4,6 +4,7 @@ on: push
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
 
     services:
@@ -26,20 +27,29 @@ jobs:
         node-version: [14.x, 15.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v2.1.4
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2.1.4
         with:
           node-version: ${{ matrix.node-version }}
 
-      - id: cache-npm-dependencies
+      - name: Cache npm dependencies
+        id: cache-npm-dependencies
         uses: actions/cache@v2
         with:
           path: node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
 
-      - run: npm ci
+      - name: Install npm dependencies
+        run: npm ci
 
-      - run: npm run test:cov
+      - name: Build
+        run: npm run build
 
-      - run: npm run test:e2e
+      - name: Run unit tests
+        run: npm run test:cov
+
+      - name: Run e2e tests
+        run: npm run test:e2e
