@@ -1,0 +1,45 @@
+name: Node.js CI
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nestjs_playground_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 20
+
+    strategy:
+      matrix:
+        node-version: [14.x, 15.x]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2.1.4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - id: cache-npm-dependencies
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+
+      - run: npm ci
+
+      - run: npm run test:cov
+
+      - run: npm run test:e2e
